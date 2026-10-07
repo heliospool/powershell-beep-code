@@ -1,12 +1,23 @@
-Literally just copy/paste this into PowerShell and hit ENTER:
+# Korobeiniki in PowerShell
+
+The Tetris theme (Korobeiniki), synthesized in pure PowerShell: a square-wave melody over a Game Boy-style bass line. No downloads, no files, no admin.
+
+**Requires:** Windows PowerShell 5.1 (built into Windows 10/11).
+
+> ⚠️ **Turn your volume down first.** Playback lasts about a minute and Ctrl+C won't stop it. Close the window to stop early.
+
+## Run
+
+Copy the block below, paste it into a PowerShell window, and press **Enter**:
 
 ```powershell
+& {
 $speed = 1.0   # 1.25 = faster, 0.8 = slower
 
-if (-not ('Chip' -as [type])) {
+if (-not ('KorobeinikiChip' -as [type])) {
 Add-Type -TypeDefinition @'
 using System; using System.IO; using System.Media;
-public static class Chip {
+public static class KorobeinikiChip {
     const int Rate = 44100;
     static float[] Buf;
     public static void Init(int totalMs) { Buf = new float[(long)Rate * totalMs / 1000 + Rate]; }
@@ -72,8 +83,21 @@ $bassB = Bass 'A A E E A A E E A A E E A A E E'
 $mel  = Parse "$melA $melA $melB $melB"
 $bass = Parse "$bassA $bassA $bassB $bassB"
 
-[Chip]::Init([int](($mel.D | Measure-Object -Sum).Sum / $speed))
-[Chip]::Voice($mel.F,  $mel.D,  $speed, 0.22, 0)
-[Chip]::Voice($bass.F, $bass.D, $speed, 0.35, 1)
-[Chip]::Play()
+[KorobeinikiChip]::Init([int](($mel.D | Measure-Object -Sum).Sum / $speed))
+[KorobeinikiChip]::Voice($mel.F,  $mel.D,  $speed, 0.22, 0)
+[KorobeinikiChip]::Voice($bass.F, $bass.D, $speed, 0.35, 1)
+[KorobeinikiChip]::Play()
+}
 ```
+
+It takes a second or two to start while it compiles the synth and renders the song.
+
+## Tweaks
+
+- **Tempo:** change `$speed` on the first line.
+- **Softer melody:** change the last `0` on the first `Voice` line to `1` (triangle wave).
+- **Edited the C# code?** Open a new PowerShell window. A window that already ran it keeps the old version.
+
+## How it works
+
+The script compiles a small C# synth and renders each voice as a waveform with a short attack and decay. It mixes the voices into a 16-bit WAV in memory and plays it with `SoundPlayer`. Notes are written as `Name+Octave:milliseconds` (e.g. `G#4:1000`), with `R` for rests.
